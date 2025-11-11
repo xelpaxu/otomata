@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DNA Sequence Matcher – Multi-Tape Turing Machine</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <h1>🧬 DNA Sequence Matcher</h1>
+            <p class="subtitle">Multi-Tape Turing Machine Simulator</p>
+            <p class="description">An educational tool demonstrating computational sequence comparison using a four-tape Turing machine model</p>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- Input Section -->
+        <section class="card">
+            <h2>Input DNA Sequences</h2>
+            <div class="input-grid">
+                <div class="input-group">
+                    <label>Sequence A <span class="label-hint">(Valid: A, T, C, G)</span></label>
+                    <input 
+                        type="text" 
+                        id="sequenceA" 
+                        class="input-field"
+                        placeholder="e.g., ATCG"
+                        value="ATCG"
+                    >
+                </div>
+                <div class="input-group">
+                    <label>Sequence B <span class="label-hint">(Valid: A, T, C, G)</span></label>
+                    <input 
+                        type="text" 
+                        id="sequenceB" 
+                        class="input-field"
+                        placeholder="e.g., ATGG"
+                        value="ATGG"
+                    >
+                </div>
+            </div>
+            <button onclick="initializeSimulation()" class="btn btn-success btn-large">
+                🚀 Initialize Simulation
+            </button>
+        </section>
+
+        <!-- Control Panel -->
+        <section class="card">
+            <h2>Control Panel</h2>
+            <div class="button-group">
+                <button id="runBtn" onclick="runSimulation()" class="btn btn-primary" disabled>
+                    ▶ Run
+                </button>
+                <button id="pauseBtn" onclick="pauseSimulation()" class="btn btn-secondary" disabled>
+                    ⏸ Pause
+                </button>
+                <button id="stepBtn" onclick="stepSimulation()" class="btn btn-primary" disabled>
+                    ⏭ Step
+                </button>
+                <button id="resetBtn" onclick="resetSimulation()" class="btn btn-secondary" disabled>
+                    ⏹ Reset
+                </button>
+                <button onclick="exportResults()" class="btn btn-secondary" id="exportBtn" disabled>
+                    📄 Export
+                </button>
+            </div>
+            <div class="speed-control">
+                <label>Animation Speed: <span id="speedValue" class="speed-value">500</span>ms</label>
+                <input 
+                    type="range" 
+                    id="speedSlider" 
+                    min="100" 
+                    max="2000" 
+                    value="500" 
+                    step="100"
+                    class="slider"
+                    onchange="updateSpeed()"
+                >
+            </div>
+        </section>
+
+        <!-- Status Display -->
+        <section class="card">
+            <h2>Status</h2>
+            <div class="status-grid">
+                <div class="status-item">
+                    <p class="status-label">Current State</p>
+                    <p class="status-value" id="currentState">-</p>
+                </div>
+                <div class="status-item">
+                    <p class="status-label">Step Number</p>
+                    <p class="status-value" id="stepNumber">0</p>
+                </div>
+                <div class="status-item">
+                    <p class="status-label">Partial Result</p>
+                    <p class="status-value" id="partialResult">-</p>
+                </div>
+            </div>
+            <div class="transition-info">
+                <p class="status-label">Current Transition</p>
+                <p class="transition-display" id="transitionDisplay">-</p>
+            </div>
+        </section>
+
+        <!-- Tape Visualization -->
+        <section class="card">
+            <h2>Multi-Tape Turing Machine</h2>
+            
+            <!-- Tape 1 -->
+            <div class="tape-row">
+                <div class="tape-label">
+                    <span class="tape-title">Tape 1</span>
+                    <span class="tape-subtitle">Input A</span>
+                </div>
+                <div class="tape-container">
+                    <div id="headIndicator1" class="head-indicator-wrapper">
+                        <div class="head-indicator"></div>
+                    </div>
+                    <div id="tape1" class="tape-cells"></div>
+                </div>
+            </div>
+
+            <!-- Tape 2 -->
+            <div class="tape-row">
+                <div class="tape-label">
+                    <span class="tape-title">Tape 2</span>
+                    <span class="tape-subtitle">Input B</span>
+                </div>
+                <div class="tape-container">
+                    <div id="headIndicator2" class="head-indicator-wrapper">
+                        <div class="head-indicator"></div>
+                    </div>
+                    <div id="tape2" class="tape-cells"></div>
+                </div>
+            </div>
+
+            <!-- Tape 3 -->
+            <div class="tape-row">
+                <div class="tape-label">
+                    <span class="tape-title">Tape 3</span>
+                    <span class="tape-subtitle">Output</span>
+                </div>
+                <div class="tape-container">
+                    <div id="headIndicator3" class="head-indicator-wrapper">
+                        <div class="head-indicator"></div>
+                    </div>
+                    <div id="tape3" class="tape-cells"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Final Result -->
+        <section class="card" id="finalResultSection" style="display: none;">
+            <h2>✅ Final Result</h2>
+            <div class="result-box">
+                <p class="result-line"><strong>Sequence A:</strong> <span id="finalSeqA"></span></p>
+                <p class="result-line"><strong>Sequence B:</strong> <span id="finalSeqB"></span></p>
+                <p class="result-line"><strong>Result:</strong> <span id="finalOutput" class="result-output"></span></p>
+                <p class="result-line"><strong>Statistics:</strong> <span id="matchStats"></span></p>
+            </div>
+        </section>
+
+        <!-- Single-Tape Turing Machine -->
+        <section class="card" id="singleTapeSection" style="display: none;">
+            <h2>🔄 Single-Tape Turing Machine Equivalent</h2>
+            <p class="table-description">Single-tape implementation with both sequences on one tape, separated by #</p>
+            
+            <!-- Single Tape Display -->
+            <div class="single-tape-visualization">
+                <div class="tape-format-info">
+                    <span class="format-label">Tape Format:</span>
+                    <code class="tape-format">_<span class="seq-a-color">SeqA</span>#<span class="seq-b-color">SeqB</span>#<span class="output-color">Output</span>_</code>
+                </div>
+                
+                <div class="single-tape-container">
+                    <div id="singleHeadIndicator" class="single-head-indicator-wrapper">
+                        <div class="head-indicator"></div>
+                    </div>
+                    <div id="singleTape" class="tape-cells"></div>
+                </div>
+                
+                <div class="single-tape-status">
+                    <div class="status-item-small">
+                        <span class="status-label-small">Current State:</span>
+                        <span class="status-value-small" id="singleState">-</span>
+                    </div>
+                    <div class="status-item-small">
+                        <span class="status-label-small">Step:</span>
+                        <span class="status-value-small" id="singleStep">0</span>
+                    </div>
+                    <div class="status-item-small">
+                        <span class="status-label-small">Phase:</span>
+                        <span class="status-value-small" id="singlePhase">-</span>
+                    </div>
+                </div>
+                
+                <div class="single-tape-controls">
+                    <button id="singleRunBtn" onclick="runSingleTape()" class="btn btn-primary btn-small">
+                        ▶ Run Single-Tape
+                    </button>
+                    <button id="singlePauseBtn" onclick="pauseSingleTape()" class="btn btn-secondary btn-small" disabled>
+                        ⏸ Pause
+                    </button>
+                    <button id="singleStepBtn" onclick="stepSingleTape()" class="btn btn-primary btn-small">
+                        ⏭ Step
+                    </button>
+                    <button id="singleResetBtn" onclick="resetSingleTape()" class="btn btn-secondary btn-small">
+                        ⏹ Reset
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Transition Function -->
+        <section class="card" id="transitionFunctionSection" style="display: none;">
+            <h2>⚙️ Transition Function</h2>
+            <p class="table-description">Mathematical representation of the Turing Machine's transition function δ</p>
+            
+            <!-- State Transition Diagram -->
+            <div class="state-diagram-container">
+                <h3>State Transition Diagram</h3>
+                <p class="diagram-description">Visual representation of the 3-tape Turing Machine states and transitions</p>
+                
+                <!-- Simple explanation -->
+                <div class="diagram-explanation">
+                    <h4>📖 How to Read This Diagram:</h4>
+                    <ul>
+                        <li><strong>Circles</strong> = States (where the machine can be)</li>
+                        <li><strong>Arrows</strong> = Transitions (how the machine moves between states)</li>
+                        <li><strong>Text on arrows</strong> = Conditions and actions for that transition</li>
+                        <li><strong>q₀</strong> = Starting point - checks if there are bases to compare</li>
+                        <li><strong>q₁</strong> = Comparison state - compares bases and writes result</li>
+                        <li><strong>qaccept</strong> = End point - machine stops here (double circle = final state)</li>
+                    </ul>
+                    <p><strong>The machine flow:</strong> Start at q₀ → If both tapes have DNA bases, go to q₁ → Compare the bases → Write ✓ (match) or ✗ (mismatch) → Move all tape heads RIGHT → Return to q₀ → Repeat until a blank (_) is found → Move to qaccept and HALT</p>
+                </div>
+                
+                <div class="diagram-box">
+                    <svg viewBox="0 0 900 600" xmlns="http://www.w3.org/2000/svg" class="state-diagram">
+                        <!-- Define arrow markers -->
+                        <defs>
+                            <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                                <polygon points="0 0, 10 3, 0 6" fill="#667eea" />
+                            </marker>
+                            <marker id="arrowhead-green" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                                <polygon points="0 0, 10 3, 0 6" fill="#20c997" />
+                            </marker>
+                            <marker id="arrowhead-red" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                                <polygon points="0 0, 10 3, 0 6" fill="#e74c3c" />
+                            </marker>
+                        </defs>
+                        
+                        <!-- Start indicator -->
+                        <line x1="50" y1="150" x2="135" y2="150" stroke="#667eea" stroke-width="3" marker-end="url(#arrowhead)" />
+                        <text x="70" y="135" font-size="15" fill="#667eea" font-weight="bold">Start</text>
+                        
+                        <!-- State q0 (Start) -->
+                        <circle cx="200" cy="150" r="50" fill="#f0f4ff" stroke="#667eea" stroke-width="4" />
+                        <text x="200" y="158" text-anchor="middle" font-size="24" font-weight="bold" fill="#667eea">q₀</text>
+                        <text x="200" y="80" text-anchor="middle" font-size="13" fill="#667eea" font-weight="700">START</text>
+                        <text x="200" y="95" text-anchor="middle" font-size="10" fill="#6c757d">Check sequences</text>
+                        
+                        <!-- State q1 (Compare) -->
+                        <circle cx="200" cy="350" r="50" fill="#fff5f0" stroke="#ff6b6b" stroke-width="4" />
+                        <text x="200" y="358" text-anchor="middle" font-size="24" font-weight="bold" fill="#ff6b6b">q₁</text>
+                        <text x="200" y="425" text-anchor="middle" font-size="13" fill="#ff6b6b" font-weight="700">COMPARE</text>
+                        <text x="200" y="440" text-anchor="middle" font-size="10" fill="#6c757d">Match or mismatch?</text>
+                        
+                        <!-- State qaccept (Accept) -->
+                        <circle cx="650" cy="150" r="50" fill="#e8f8f5" stroke="#20c997" stroke-width="4" />
+                        <circle cx="650" cy="150" r="43" fill="none" stroke="#20c997" stroke-width="2.5" />
+                        <text x="650" y="158" text-anchor="middle" font-size="20" font-weight="bold" fill="#20c997">qaccept</text>
+                        <text x="650" y="80" text-anchor="middle" font-size="13" fill="#20c997" font-weight="700">HALT</text>
+                        <text x="650" y="95" text-anchor="middle" font-size="10" fill="#6c757d">Finished!</text>
+                        
+                        <!-- Transition: q0 → q1 (both tapes have symbols) -->
+                        <path d="M 175 195 L 175 305" fill="none" stroke="#667eea" stroke-width="3" marker-end="url(#arrowhead)" />
+                        <rect x="50" y="235" width="115" height="50" fill="white" stroke="#667eea" stroke-width="2" rx="8" opacity="0.98"/>
+                        <text x="107" y="254" text-anchor="middle" font-size="11" fill="#495057" font-weight="700">
+                            <tspan x="107" dy="0">Both tapes have</tspan>
+                            <tspan x="107" dy="14">DNA bases</tspan>
+                            <tspan x="107" dy="13" font-size="9" fill="#6c757d">(A, T, C, or G)</tspan>
+                        </text>
+                        
+                        <!-- Transition: q1 → q0 (match - left arc) -->
+                        <path d="M 152 340 Q 70 250 152 160" fill="none" stroke="#20c997" stroke-width="3" marker-end="url(#arrowhead-green)" />
+                        <rect x="330" y="220" width="135" height="62" fill="white" stroke="#20c997" stroke-width="2" rx="8" opacity="0.98"/>
+                        <text x="397" y="241" text-anchor="middle" font-size="11" fill="#20c997" font-weight="700">
+                            <tspan x="397" dy="0">✓ Bases MATCH</tspan>
+                            <tspan x="397" dy="15">Write ✓ on Tape 3</tspan>
+                            <tspan x="397" dy="14">Move all heads</tspan>
+                            <tspan x="397" dy="13" font-size="10" font-weight="900">RIGHT →</tspan>
+                        </text>
+                        
+                        <!-- Transition: q1 → q0 (mismatch - right arc) -->
+                        <path d="M 248 340 Q 330 250 248 160" fill="none" stroke="#e74c3c" stroke-width="3" marker-end="url(#arrowhead-red)" />
+                        <rect x="480" y="220" width="155" height="62" fill="white" stroke="#e74c3c" stroke-width="2" rx="8" opacity="0.98"/>
+                        <text x="557" y="241" text-anchor="middle" font-size="11" fill="#e74c3c" font-weight="700">
+                            <tspan x="557" dy="0">✗ Bases DON'T match</tspan>
+                            <tspan x="557" dy="15">Write ✗ on Tape 3</tspan>
+                            <tspan x="557" dy="14">Move all heads</tspan>
+                            <tspan x="557" dy="13" font-size="10" font-weight="900">RIGHT →</tspan>
+                        </text>
+                        
+                        <!-- Transition: q0 → qaccept (end of sequence) -->
+                        <path d="M 250 150 L 595 150" fill="none" stroke="#667eea" stroke-width="3" marker-end="url(#arrowhead)" stroke-dasharray="10,6" />
+                        <rect x="370" y="115" width="160" height="28" fill="white" stroke="#667eea" stroke-width="2" rx="6" opacity="0.98"/>
+                        <text x="450" y="134" text-anchor="middle" font-size="11" fill="#495057" font-weight="700">
+                            <tspan x="450" dy="0">Either tape has blank (_)</tspan>
+                        </text>
+                        
+                        <!-- Transition: q1 → qaccept (end during compare) -->
+                        <path d="M 248 360 Q 450 400 600 180" fill="none" stroke="#667eea" stroke-width="3" marker-end="url(#arrowhead)" stroke-dasharray="10,6" />
+                        <rect x="370" y="395" width="160" height="28" fill="white" stroke="#667eea" stroke-width="2" rx="6" opacity="0.98"/>
+                        <text x="450" y="414" text-anchor="middle" font-size="11" fill="#495057" font-weight="700">
+                            <tspan x="450" dy="0">Either tape has blank (_)</tspan>
+                        </text>
+                        
+                        <!-- Legend -->
+                        <g transform="translate(680, 500)">
+                            <text x="0" y="0" font-size="13" fill="#495057" font-weight="700">Legend:</text>
+                            <line x1="0" y1="15" x2="40" y2="15" stroke="#667eea" stroke-width="3" />
+                            <text x="45" y="19" font-size="11" fill="#6c757d">Control flow</text>
+                            <line x1="0" y1="32" x2="40" y2="32" stroke="#20c997" stroke-width="3" />
+                            <text x="45" y="36" font-size="11" fill="#6c757d">Match (✓)</text>
+                            <line x1="0" y1="49" x2="40" y2="49" stroke="#e74c3c" stroke-width="3" />
+                            <text x="45" y="53" font-size="11" fill="#6c757d">Mismatch (✗)</text>
+                            <line x1="0" y1="66" x2="40" y2="66" stroke="#667eea" stroke-width="3" stroke-dasharray="10,6" />
+                            <text x="45" y="70" font-size="11" fill="#6c757d">Halt</text>
+                        </g>
+                    </svg>
+                </div>
+                
+                <!-- Diagram Code -->
+                <details class="diagram-code">
+                    <summary>View Diagram Code (Mermaid Syntax)</summary>
+                    <pre><code>stateDiagram-v2
+    [*] --> q0 : Start
+    
+    q0 --> q1 : T1,T2 ∈ {A,C,G,T}<br/>Stay (S,S,S)
+    q0 --> qaccept : T1='_' or T2='_'<br/>Halt
+    
+    q1 --> q0 : Match (T1=T2)<br/>Write ✓, Move (R,R,R)
+    q1 --> q0 : Mismatch (T1≠T2)<br/>Write ✗, Move (R,R,R)
+    q1 --> qaccept : T1='_' or T2='_'<br/>Halt
+    
+    qaccept --> [*]
+    
+    note right of q0
+        Initial state
+        Check for valid symbols
+    end note
+    
+    note right of q1
+        Comparison state
+        Read from T1 and T2
+        Write to T3
+    end note
+    
+    note right of qaccept
+        Accepting state
+        Machine halts
+    end note</code></pre>
+                </details>
+            </div>
+            
+            <div class="transition-function-box">
+                <div class="function-definition">
+                    <h3>Formal Definition</h3>
+                    <div class="math-formula">
+                        <p><strong>δ : Q × Γ³ → Q × Γ³ × {L, R, S}³</strong></p>
+                    </div>
+                    <div class="definition-details">
+                        <p><strong>Where:</strong></p>
+                        <ul>
+                            <li><strong>Q</strong> = {q0, q1, qaccept} — Set of states</li>
+                            <li><strong>Γ</strong> = {A, T, C, G, _, ✓, ✗} — Tape alphabet</li>
+                            <li><strong>Σ</strong> = {A, T, C, G} — Input alphabet</li>
+                            <li><strong>q0</strong> — Initial state</li>
+                            <li><strong>qaccept</strong> — Accepting state</li>
+                            <li><strong>_</strong> — Blank symbol</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="transition-rules">
+                    <h3>Key Transition Rules</h3>
+                    <div class="rules-grid">
+                        <div class="rule-card">
+                            <div class="rule-header">State q0 → q1</div>
+                            <div class="rule-body">
+                                <code>δ(q0, (x, y, _, _)) = (q1, (x, y, _, _), (S, S, S, S))</code>
+                                <p class="rule-desc">Where x, y ∈ {A, T, C, G}</p>
+                                <p class="rule-note">Start comparison when both tapes have symbols</p>
+                            </div>
+                        </div>
+                        
+                        <div class="rule-card">
+                            <div class="rule-header">State q1 → q0 (Match)</div>
+                            <div class="rule-body">
+                                <code>δ(q1, (x, x, _, _)) = (q0, (x, x, ✓, ✓), (R, R, R, R))</code>
+                                <p class="rule-desc">Where x ∈ {A, T, C, G}</p>
+                                <p class="rule-note">Write ✓ when bases match, move all heads right</p>
+                            </div>
+                        </div>
+                        
+                        <div class="rule-card">
+                            <div class="rule-header">State q1 → q0 (Mismatch)</div>
+                            <div class="rule-body">
+                                <code>δ(q1, (x, y, _, _)) = (q0, (x, y, ✗, ✗), (R, R, R, R))</code>
+                                <p class="rule-desc">Where x, y ∈ {A, T, C, G} and x ≠ y</p>
+                                <p class="rule-note">Write ✗ when bases differ, move all heads right</p>
+                            </div>
+                        </div>
+                        
+                        <div class="rule-card">
+                            <div class="rule-header">Halt Condition</div>
+                            <div class="rule-body">
+                                <code>δ(q0, (_, *, *, *)) = (qaccept, (_, *, *, *), (S, S, S, S))</code>
+                                <code>δ(q0, (*, _, *, *)) = (qaccept, (*, _, *, *), (S, S, S, S))</code>
+                                <p class="rule-note">Halt when either input tape reaches blank</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="complexity-analysis">
+                    <h3>Complexity Analysis</h3>
+                    <div class="complexity-grid">
+                        <div class="complexity-item">
+                            <span class="complexity-label">Time Complexity:</span>
+                            <span class="complexity-value">O(n)</span>
+                            <p class="complexity-explanation">where n = length of shorter sequence. Each position requires constant time to compare.</p>
+                        </div>
+                        <div class="complexity-item">
+                            <span class="complexity-label">Space Complexity:</span>
+                            <span class="complexity-value">O(n + m)</span>
+                            <p class="complexity-explanation">where n, m = lengths of sequences A and B. Three tapes store input and output.</p>
+                        </div>
+                        <div class="complexity-item">
+                            <span class="complexity-label">Number of States:</span>
+                            <span class="complexity-value">3 states</span>
+                            <p class="complexity-explanation">q0 (start), q1 (compare), qaccept (halt)</p>
+                        </div>
+                        <div class="complexity-item">
+                            <span class="complexity-label">Number of Transitions:</span>
+                            <span class="complexity-value">38 transitions</span>
+                            <p class="complexity-explanation">Covers all DNA nucleotide combinations and halt conditions</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Execution Table -->
+        <section id="transitionTableSection" class="card" style="display:none;">
+            <h2>Transition History</h2>
+            <p class="table-description">Full list of executed transitions during the multi-tape simulation.</p>
+            <div class="table-wrapper">
+                <table class="transition-table" aria-describedby="transition-desc">
+                <thead>
+                    <tr>
+                    <th>Current State</th>
+                    <th>Read Tape 1</th>
+                    <th>Read Tape 2</th>
+                    <th>New State</th>
+                    <th>Write Tape 1</th>
+                    <th>Write Tape 2</th>
+                    <th>Move Tape 1</th>
+                    <th>Move Tape 2</th>
+                    </tr>
+                </thead>
+                <tbody id="transitionTableBody">
+                    <!-- Rows will be injected here by JavaScript -->
+                </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>Multi-Tape Turing Machine DNA Sequence Matcher</p>
+            <p class="footer-subtitle">Educational Tool for Computer Science</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
